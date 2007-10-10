@@ -9,7 +9,7 @@ This plugin helps you to manage your tags
 
 == Description ==
 
-With Wordpress 2.3 tags are included in Wordpress. At moment there are almost no functionalities to support these tags in Wordpress. This plugin changes this behaviour and adds a page under Management>Tags. Here you can manage your tags!
+With WordPress 2.3 tags are included in Wordpress. At moment there are almost no functionalities to support these tags in Wordpress. This plugin changes this behaviour and adds a page under Management>Tags. Here you can manage your tags!
 
 == Installation ==
 <ul>
