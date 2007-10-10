@@ -2,12 +2,14 @@
 
 function tagman_option_postlist() {
 	global $wpdb;
-	$sql_posts = "SELECT ID, post_title, post_author, post_date, post_status FROM $wpdb->posts WHERE post_type='post' ORDER BY post_date DESC";
+	$sql_posts = "SELECT ID, post_title, post_author, post_date, post_status FROM $wpdb->posts WHERE post_type='post' ORDER BY post_title, post_date DESC";
 	$res_posts = $wpdb->get_results($sql_posts);
 	$editpost = ""; 
 	foreach($res_posts as $row_post) {
+		$sql_tagcount = "SELECT COUNT(*) AS TagCount FROM $wpdb->term_relationships a, $wpdb->term_taxonomy b WHERE b.taxonomy='post_tag' AND a.term_taxonomy_id=b.term_taxonomy_id AND object_id=$row_post->ID";
+		$res_tagcount = $wpdb->get_var($sql_tagcount);		
 		if ( current_user_can('edit_post',$row_post->post_author) ) {
-			$editpost .= '<option value="'.$row_post->ID.'">'.$row_post->post_title.' ('.mysql2date(__('Y-m-d \<\b\r \/\> g:i:s a'), $row_post->post_date).')</option>';
+			$editpost .= '<option value="'.$row_post->ID.'">(Tagcount: '.$res_tagcount.') '.$row_post->post_title.' ('.mysql2date(__('Y-m-d \<\b\r \/\> g:i:s a'), $row_post->post_date).')</option>';
 		}					
 	}
 	if (strlen($editpost)>0) {
@@ -53,6 +55,7 @@ function tagman_option_gettagposts($id) {
 				<th scope="col"><?php echo __('When'); ?></th>
 				<th scope="col"><?php echo __('Title'); ?></th>
 				<th scope="col"><?php echo __('Author'); ?></th>
+				<th scope="col"><?php echo __('Edit'); ?></th>
 				<th scope="col">Edit tags</th>
 				<th scope="col">Remove</th>
 			</tr>
@@ -76,6 +79,10 @@ function tagman_option_gettagposts($id) {
 						$author = get_userdata($row_post->post_author);
 						echo '<tr id="post-" class="'.$class.'"><td><div style="text-align: center;">'.$row_post->ID.'</div></td><td>'.$displaytime.'</td><td>'.$row_post->post_title.'</td><td>'.$author->display_name.'</td>';
 						echo '<td>';
+						if ( current_user_can('edit_post',$row_post->post_author) ) { 
+							echo '<a href="post.php?action=edit&amp;post='.$row_post->ID.'" class="edit">'. __('Edit').'</a>'; 
+						} 												
+						echo '</td><td>';
 						if ( current_user_can('edit_post',$row_post->post_author) ) { 
 							echo '<a href="edit.php?page=tagsmanager.php&edit_post='.$row_post->ID.'" class="edit">Edit tags</a>';
 						} 						
@@ -337,6 +344,7 @@ function tagman_option_getnewestposts($count=5) {
 				<th scope="col"><?php echo __('When'); ?></th>
 				<th scope="col"><?php echo __('Title'); ?></th>
 				<th scope="col"><?php echo __('Author'); ?></th>
+				<th scope="col"><?php echo __('Edit'); ?></th>
 				<th scope="col">Edit tags</th>
 			</tr>
 		</thead>
@@ -355,6 +363,10 @@ function tagman_option_getnewestposts($count=5) {
 							$author = get_userdata($row_post->post_author);
 							echo '<tr id="post-" class="'.$class.'"><td><div style="text-align: center;">'.$row_post->ID.'</div></td><td>'.$displaytime.'</td><td>'.$row_post->post_title.'</td><td>'.$author->display_name.'</td>';
 							echo '<td>';
+							if ( current_user_can('edit_post',$row_post->post_author) ) { 
+								echo '<a href="post.php?action=edit&amp;post='.$row_post->ID.'" class="edit">'. __('Edit').'</a>'; 
+							} 												
+							echo '</td><td>';
 							if ( current_user_can('edit_post',$row_post->post_author) ) { 
 								echo '<a href="edit.php?page=tagsmanager.php&edit_post='.$row_post->ID.'" class="edit">Edit tags</a>';
 							} 						
