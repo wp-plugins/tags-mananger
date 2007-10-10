@@ -31,6 +31,11 @@ For Updates:
 == Screenshots ==
 
 == Changes ==
+Version 0.3
+<ul>
+<li>Edit post tags!</li>
+</ul>
+
 Version 0.2
 <ul>
 <li>Didn't rename slug when renaming tag!</li>

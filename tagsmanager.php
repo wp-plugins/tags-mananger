@@ -4,7 +4,7 @@ Plugin Name: Tags Manager
 Plugin URI: http://www.matusz.ch/blog/projekte/tags-manager-wordpress-plugin/
 Feed URI: http://www.matusz.ch/blog/tags/tags-manager-wp-plugin/feed/
 Description: This plugin helps you to manage your tags 
-Version: 0.2 Beta
+Version: 0.3 Beta
 Author: Patrick Matusz
 Author URI: http://www.matusz.ch/blog/
 */
@@ -30,6 +30,7 @@ function tagman_options_page() {
 	$success_messages = array();
 	$error_messages = array();
 	
+	$editpostid = intval(tagman_geturl_param("edit_post"));
 	$edittagid = intval(tagman_geturl_param("edit_tag"));
 	$actiontype = tagman_geturl_param("actiontype");
 
@@ -109,22 +110,34 @@ function tagman_options_page() {
 		</form>		
 		<?php	
 	} else {
+		if ($editpostid != 0) {
+			?>
+			<form method="post" action="edit.php?page=tagsmanager.php">
+				<div class="wrap">
+					<h2>Not implemented yet!</h2>
+				</div>
+			</form>	
+			<?php
+		} else {
 		?>
-		<form method="post" action="edit.php?page=tagsmanager.php">
-			<div class="wrap">
-				<h2>Posts without Tags</h2>
-				<?php tagman_option_getnewestposts(3); ?>
-				<p>&nbsp;</p>		
-				<h2>Manage Tags</h2>
-				<?php tagman_option_gettags(); ?>
-				<p>&nbsp;</p>
-				<h2>Helpfunctions</h2>
-				<p class="submit">
-					<input type='submit' name='convert2lower' value='Convert tag names to lowercase' />				
-				</p>								
-			</div>
-		</form>
-		<?php
+			<form method="post" action="edit.php?page=tagsmanager.php">
+				<div class="wrap">
+					<h2>Posts without Tags</h2>
+					<?php tagman_option_getnewestposts(3); ?>
+					<p>&nbsp;</p>		
+					<h2>Manage Tags</h2>
+					<?php tagman_option_gettags(); ?>
+					<p>&nbsp;</p>
+					<h2>Edit post tags</h2>
+					<?php tagman_option_postlist(); ?>
+					<h2>Helpfunctions</h2>
+					<p class="submit">
+						<input type='submit' name='convert2lower' value='Convert tag names to lowercase' />				
+					</p>								
+				</div>
+			</form>
+			<?php
+		}		
 	}
 }
 
