@@ -4,6 +4,7 @@ Tags: post tags management
 Requires at least: 2.3.0
 Tested up to: 2.3.0
 Stable tag: 0.2
+Donate link: http://www.matusz.ch/donate_tagsmanagerwpplugin.htm
 
 This plugin helps you to manage your tags
 
