@@ -1,5 +1,140 @@
 <?php
 
+function tagman_option_getpostform($id) {
+	global $wpdb;
+	$alltags = '<select multiple="multiple" id="alltags" name="tagman_alltags" size="20" style="width: 250px;" >';
+	$sql_terms = "SELECT a.term_id, a.name, b.term_taxonomy_id, b.count, a.slug FROM $wpdb->terms a, $wpdb->term_taxonomy b WHERE a.term_id=b.term_id AND b.taxonomy='post_tag' ORDER BY a.name";
+	$res_terms = $wpdb->get_results($sql_terms);
+	foreach ($res_terms as $row_term) {
+		if (tagman_is_post_tag_only($row_term->term_id)) {
+			$alltags .= '<option value="'.$row_term->term_taxonomy_id.'">'.$row_term->name.'</option>';
+		}
+	}
+	$alltags .= '</select>';
+
+	$posttags = '<select multiple="multiple" id="posttags" name="tagman_posttags" size="20" style="width: 250px;" >';
+	$sql_terms = "SELECT a.term_id, a.name, b.term_taxonomy_id, b.count, a.slug FROM $wpdb->terms a, $wpdb->term_taxonomy b, $wpdb->term_relationships c WHERE b.term_taxonomy_id = c.term_taxonomy_id AND a.term_id=b.term_id AND b.taxonomy='post_tag' AND c.object_id=$id ORDER BY a.name";
+	$res_terms = $wpdb->get_results($sql_terms);
+	foreach ($res_terms as $row_term) {
+		if (tagman_is_post_tag_only($row_term->term_id)) {
+			$posttags .= '<option value="'.$row_term->term_taxonomy_id.'">'.$row_term->name.'</option>';
+		}
+	}
+	$posttags .= '</select>';	
+	
+	$sql_posts = "SELECT ID, post_title, post_author, post_date, post_status FROM $wpdb->posts WHERE ID=$id AND post_type='post' ORDER BY post_title, post_date DESC";
+	$res_posts = $wpdb->get_results($sql_posts);
+	foreach($res_posts as $row_post) {
+		$sql_tagcount = "SELECT COUNT(*) AS TagCount FROM $wpdb->term_relationships a, $wpdb->term_taxonomy b WHERE b.taxonomy='post_tag' AND a.term_taxonomy_id=b.term_taxonomy_id AND object_id=$row_post->ID";
+		$res_tagcount = $wpdb->get_var($sql_tagcount);
+		$title = str_replace('"','&quot;',$row_post->post_title);		
+		if ($row_post->post_status=="publish") {
+			$displaytime = mysql2date(__('Y-m-d g:i:s a'), $row_post->post_date);	 
+		} else {
+			$displaytime = $row_post->post_status;
+		}						
+		
+	?>
+		<script type="text/javascript">
+			function add() {
+				var alltags = document.getElementById("alltags");
+				var posttags = document.getElementById("posttags");
+				var tagexist = false;
+				for (var i=0; i<alltags.length; i++) {
+					if (alltags.options[i].selected == true) {
+						tagexist = false;
+						for (var j=0; j<posttags.length; j++) {
+							if (alltags.options[i].value==posttags.options[j].value) {
+								tagexist = true;
+								break;
+							}
+						}
+						if (tagexist == false) {
+							posttags.options[posttags.length] = new Option(alltags.options[i].text, alltags.options[i].value, false, false);																											
+						}
+					}
+				}
+			}
+
+			function remove(all) {
+				var posttags = document.getElementById("posttags");
+				var tagexist = false;
+				for (var i=posttags.length-1; i>=0; i--) {												
+					if (all || posttags.options[i].selected == true) {
+						posttags.options[i] = null;
+					}
+				}
+			}
+			
+			function selectAll() {
+				var posttags = document.getElementById("posttags");						
+				for (var i=posttags.length-1; i>=0; i--) {												
+					posttags.options[i].selected=true;
+				}				
+			}
+			
+		</script>		
+		<form method="post" action="edit.php?page=tagsmanager.php" onsubmit="selectAll()">
+			<div class="wrap">	
+				<h2>Edit Post</h2>
+				<table class="editform" cellspacing="2" cellpadding="5" width="100%" id="editform">
+					<tr>
+						<th valign="top" style="padding-top: 10px;" width="30%">
+							Post ID / Count:
+						</th>
+						<td width="70%" colspan="2">
+							<input type="text" size="5" readonly="readonly" name="tagman_ro_postid" style="text-align: center;" value="<?php echo $row_post->ID; ?>"> / <input type="text" size="5" readonly="readonly" name="tagman_postcount" style="text-align: center" value="<?php echo $res_tagcount; ?>">
+							<input type="hidden" name="tagman_postid" value="<?php echo $row_post->ID; ?>">							
+						</td>
+					</tr>	
+					<tr>
+						<th valign="top" style="padding-top: 10px;" width="30%">
+							Post Title:
+						</th>
+						<td width="70%" colspan="2">
+							<input type="text" size="80" readonly="readonly" name="tagman_posttitle" value="<?php echo $title; ?>">							
+						</td>
+					</tr>
+					<tr>
+						<th valign="top" style="padding-top: 10px;" width="30%">
+							Post Date:
+						</th>
+						<td width="70%" colspan="2">
+							<input type="text" size="80" readonly="readonly" name="tagman_postdate" value="<?php echo $displaytime; ?>">							
+						</td>
+					</tr>
+					<tr>
+						<th valign="top" style="padding-top: 10px;" width="30%">
+							Post Tags:
+						</th>
+						<td width="70%" colspan="2">
+							<table cellpadding="0" cellspacing="0" border="0">
+								<tr>
+									<td valign="top">								
+										<?php echo $posttags; ?>
+									</td>									
+									<td valign="top">						
+										<input type="button" value="&lt;" onclick="add()" style="width: 25px;" /><br />
+										<input type="button" value="&gt;" onclick="remove(false)" style="width: 25px;"  /><br />										
+										<input type="button" value="»" onclick="remove(true)" style="width: 25px;"  />
+									</td>
+									<td valign="top">								
+										<?php echo $alltags; ?>
+									</td>
+								</tr>
+							</table>							
+						</td>
+					</tr>	
+					<tr>
+						<td colspan="2"><p class="submit"><input type='submit' name='tagman_postsave' value='Save' /></p></td>														
+					</tr>				
+				</table>
+			</div>
+		</form>								
+	<?
+	}
+}
+
 function tagman_option_postlist() {
 	global $wpdb;
 	$sql_posts = "SELECT ID, post_title, post_author, post_date, post_status FROM $wpdb->posts WHERE post_type='post' ORDER BY post_title, post_date DESC";
@@ -9,7 +144,12 @@ function tagman_option_postlist() {
 		$sql_tagcount = "SELECT COUNT(*) AS TagCount FROM $wpdb->term_relationships a, $wpdb->term_taxonomy b WHERE b.taxonomy='post_tag' AND a.term_taxonomy_id=b.term_taxonomy_id AND object_id=$row_post->ID";
 		$res_tagcount = $wpdb->get_var($sql_tagcount);		
 		if ( current_user_can('edit_post',$row_post->post_author) ) {
-			$editpost .= '<option value="'.$row_post->ID.'">(Tagcount: '.$res_tagcount.') '.$row_post->post_title.' ('.mysql2date(__('Y-m-d \<\b\r \/\> g:i:s a'), $row_post->post_date).')</option>';
+			if ($row_post->post_status=="publish") {
+				$displaytime = mysql2date(__('Y-m-d g:i:s a'), $row_post->post_date);	 
+			} else {
+				$displaytime = $row_post->post_status;
+			}						
+			$editpost .= '<option value="'.$row_post->ID.'">'.$row_post->post_title.' ('.$res_tagcount.' / '.$displaytime.')</option>';
 		}					
 	}
 	if (strlen($editpost)>0) {
@@ -44,7 +184,7 @@ function tagman_tag_removepost($id, $postid) {
 
 function tagman_option_gettagposts($id) {
 	global $wpdb;
-	$sql_posts = "SELECT ID, post_title, post_author, post_date, post_status FROM $wpdb->posts WHERE post_type='post' ORDER BY post_date DESC";
+	$sql_posts = "SELECT ID, post_title, post_author, post_date, post_status FROM $wpdb->posts WHERE post_type='post' ORDER BY post_title, post_date DESC";
 	$res_posts = $wpdb->get_results($sql_posts); 
 	?>
 	<h3>Posts</h3>
@@ -69,13 +209,14 @@ function tagman_option_gettagposts($id) {
 					$sql_tagcount = "SELECT COUNT(*) AS TagCount FROM $wpdb->term_relationships a, $wpdb->term_taxonomy b WHERE b.taxonomy='post_tag' AND a.term_taxonomy_id=b.term_taxonomy_id AND object_id=$row_post->ID AND b.term_taxonomy_id=$id";
 					$res_tagcount = $wpdb->get_var($sql_tagcount);
 					if ($res_tagcount>0) {
-						$count_posts++;
-						$class = ('alternate' == $class) ? '' : 'alternate';
 						if ($row_post->post_status=="publish") {
 							$displaytime = mysql2date(__('Y-m-d \<\b\r \/\> g:i:s a'), $row_post->post_date);	 
 						} else {
 							$displaytime = $row_post->post_status;
-						}						
+						}											
+						
+						$count_posts++;
+						$class = ('alternate' == $class) ? '' : 'alternate';
 						$author = get_userdata($row_post->post_author);
 						echo '<tr id="post-" class="'.$class.'"><td><div style="text-align: center;">'.$row_post->ID.'</div></td><td>'.$displaytime.'</td><td>'.$row_post->post_title.'</td><td>'.$author->display_name.'</td>';
 						echo '<td>';
@@ -92,8 +233,13 @@ function tagman_option_gettagposts($id) {
 						}
 						echo '</td></tr>';				
 					} else {
+						if ($row_post->post_status=="publish") {
+							$displaytime = mysql2date(__('Y-m-d g:i:s a'), $row_post->post_date);	 
+						} else {
+							$displaytime = $row_post->post_status;
+						}										
 						if ( current_user_can('edit_post',$row_post->post_author) ) {
-							$addpost .= '<option value="'.$row_post->ID.'">'.$row_post->post_title.' ('.mysql2date(__('Y-m-d \<\b\r \/\> g:i:s a'), $row_post->post_date).')</option>';
+							$addpost .= '<option value="'.$row_post->ID.'">'.$row_post->post_title.' ('.$displaytime.')</option>';
 						}			
 					}
 				}			
@@ -175,7 +321,7 @@ function tagman_option_gettagform($id) {
 							Tag ID / Count:
 						</th>
 						<td width="70%" colspan="2">
-							<input type="text" size="5" readonly="readonly" name="tagman_ro_id" style="text-align: center;" value="<?php echo $row_term->term_taxonomy_id; ?>"> / <input type="text" size="5" disabled="disabled" name="tagman_count" style="text-align: center" value="<?php echo $row_term->count; ?>">
+							<input type="text" size="5" readonly="readonly" name="tagman_ro_id" style="text-align: center;" value="<?php echo $row_term->term_taxonomy_id; ?>"> / <input type="text" size="5" readonly="readonly" name="tagman_count" style="text-align: center" value="<?php echo $row_term->count; ?>">
 							<input type="hidden" name="tagman_id" value="<?php echo $row_term->term_taxonomy_id; ?>">							
 						</td>
 					</tr>	

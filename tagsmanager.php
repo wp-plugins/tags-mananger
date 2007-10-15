@@ -112,11 +112,7 @@ function tagman_options_page() {
 	} else {
 		if ($editpostid != 0) {
 			?>
-			<form method="post" action="edit.php?page=tagsmanager.php">
-				<div class="wrap">
-					<h2>Not implemented yet!</h2>
-				</div>
-			</form>	
+					<?php tagman_option_getpostform($editpostid); ?>
 			<?php
 		} else {
 		?>
