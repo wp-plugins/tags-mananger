@@ -37,6 +37,7 @@ function tagman_options_page() {
 	//Functions
 	if (tagman_isseturl_param("convert2lower")) {
 		if (tagman_convert_2_lower()) {
+			$editpostid = 0;
 			$success_messages[] = "Successfully converted to lowercase!";
 		} else {
 			$error_messages[] = "Error in converting to lowercase!";
@@ -83,6 +84,13 @@ function tagman_options_page() {
 				$error_messages[] = "Error in removing!";			
 			}			
 			$edittagid = intval(tagman_geturl_param("tagman_id"));
+			break;
+		case "editpost":
+				if (tagman_post_save(intval(tagman_geturl_param("tagman_postid")),tagman_geturl_param("tagman_posttags"))) {
+					$success_messages[] = "Post saved successfully!";
+				} else {
+					$error_messages[] = "Error in saving!";
+				}
 			break;
 	}
 	

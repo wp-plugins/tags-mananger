@@ -3,7 +3,7 @@ Contributors: dschuesae
 Tags: post tags management
 Requires at least: 2.3.0
 Tested up to: 2.3.0
-Stable tag: 0.2
+Stable tag: 0.3
 Donate link: http://www.matusz.ch/donate_tagsmanagerwpplugin.htm
 
 This plugin helps you to manage your tags
@@ -30,11 +30,17 @@ For Updates:
 == Frequently Asked Questions ==
 
 == Screenshots ==
+1. screenshot-1.jpg
+2. screenshot-2.jpg
+3. screenshot-3.jpg
+4. screenshot-4.jpg
+5. screenshot-5.jpg
+6. screenshot-6.jpg
 
 == Changes ==
 Version 0.3
 <ul>
-<li>Edit post tags!</li>
+<li>Shows tags of posts with the possibility to edit, remove tags and add new tags!</li>
 </ul>
 
 Version 0.2

@@ -1,8 +1,35 @@
 <?php
 
+function tagman_post_save($postid, $tagids) {
+	global $wpdb;
+	$sql_terms = "SELECT a.term_id, a.name, b.term_taxonomy_id, b.count, a.slug FROM $wpdb->terms a, $wpdb->term_taxonomy b, $wpdb->term_relationships c WHERE b.term_taxonomy_id = c.term_taxonomy_id AND a.term_id=b.term_id AND b.taxonomy='post_tag' AND c.object_id=$postid ORDER BY a.name";
+	$res_terms = $wpdb->get_results($sql_terms);
+	foreach ($res_terms as $row_term) {
+		if (tagman_is_post_tag_only($row_term->term_id)) {
+			tagman_tag_removepost($row_term->term_taxonomy_id,$postid);
+		}
+	}
+	foreach ($tagids as $id) {
+		if (is_numeric($id)) {
+			tagman_tag_addpost($id,$postid);
+		} else {			
+			$newslug = $wpdb->escape(sanitize_title($id));
+			$newvalue = $wpdb->escape($id);				
+			$terminsert = "INSERT INTO $wpdb->terms (name, slug) VALUES ('$newvalue', '$newslug')";
+			$wpdb->query($terminsert);
+			$term_id= $wpdb->insert_id;
+			$term_taxonomyinsert = "INSERT INTO $wpdb->term_taxonomy (term_id, taxonomy, description) VALUES ($term_id, 'post_tag', '')";
+			$wpdb->query($term_taxonomyinsert);
+			$term_taxonomy_id = $wpdb->insert_id;
+			tagman_tag_addpost($term_taxonomy_id,$postid);
+		}
+	}
+	return true;
+}
+
 function tagman_option_getpostform($id) {
 	global $wpdb;
-	$alltags = '<select multiple="multiple" id="alltags" name="tagman_alltags" size="20" style="width: 250px;" >';
+	$alltags = '<select multiple="multiple" id="alltags" name="tagman_alltags[]" size="20" style="width: 250px;" >';
 	$sql_terms = "SELECT a.term_id, a.name, b.term_taxonomy_id, b.count, a.slug FROM $wpdb->terms a, $wpdb->term_taxonomy b WHERE a.term_id=b.term_id AND b.taxonomy='post_tag' ORDER BY a.name";
 	$res_terms = $wpdb->get_results($sql_terms);
 	foreach ($res_terms as $row_term) {
@@ -12,7 +39,7 @@ function tagman_option_getpostform($id) {
 	}
 	$alltags .= '</select>';
 
-	$posttags = '<select multiple="multiple" id="posttags" name="tagman_posttags" size="20" style="width: 250px;" >';
+	$posttags = '<select multiple="multiple" id="posttags" name="tagman_posttags[]" size="20" style="width: 250px;" >';
 	$sql_terms = "SELECT a.term_id, a.name, b.term_taxonomy_id, b.count, a.slug FROM $wpdb->terms a, $wpdb->term_taxonomy b, $wpdb->term_relationships c WHERE b.term_taxonomy_id = c.term_taxonomy_id AND a.term_id=b.term_id AND b.taxonomy='post_tag' AND c.object_id=$id ORDER BY a.name";
 	$res_terms = $wpdb->get_results($sql_terms);
 	foreach ($res_terms as $row_term) {
@@ -73,6 +100,38 @@ function tagman_option_getpostform($id) {
 				}				
 			}
 			
+			function addNew() {
+				var alltags = document.getElementById("alltags");
+				var posttags = document.getElementById("posttags");			
+				var newValue = prompt("Enter your new tag:","");
+				if (newValue.length > 0) {
+					var tagexist = false;
+					for (var i=0; i<posttags.length; i++) {
+						if (posttags.options[i].text.toLowerCase()==newValue.toLowerCase()) {
+							tagexist=true;
+							break;
+						}	
+					}
+					
+					if (tagexist == false) {					
+						for (var j=0; j<alltags.length; j++) {
+							if (alltags.options[j].text.toLowerCase()==newValue.toLowerCase()) {
+								alltags.selectedIndex=j;
+								add();
+								tagexist=true;
+								break;
+							}						
+						}
+					} else {
+						alert("Tag already exists!");
+					}
+											
+					if (tagexist == false) {
+						posttags.options[posttags.length] = new Option(newValue, newValue, false, false);
+					}
+				}
+			}
+			
 		</script>		
 		<form method="post" action="edit.php?page=tagsmanager.php" onsubmit="selectAll()">
 			<div class="wrap">	
@@ -116,7 +175,8 @@ function tagman_option_getpostform($id) {
 									<td valign="top">						
 										<input type="button" value="&lt;" onclick="add()" style="width: 25px;" /><br />
 										<input type="button" value="&gt;" onclick="remove(false)" style="width: 25px;"  /><br />										
-										<input type="button" value="»" onclick="remove(true)" style="width: 25px;"  />
+										<input type="button" value="»" onclick="remove(true)" style="width: 25px;"  /><br />										
+										<input type="button" value="*" onclick="addNew()" style="width: 25px;"  />
 									</td>
 									<td valign="top">								
 										<?php echo $alltags; ?>
@@ -126,7 +186,7 @@ function tagman_option_getpostform($id) {
 						</td>
 					</tr>	
 					<tr>
-						<td colspan="2"><p class="submit"><input type='submit' name='tagman_postsave' value='Save' /></p></td>														
+						<td colspan="2"><p class="submit"><input type="hidden" name="actiontype" value="editpost" /><input type='submit' name='tagman_postsave' value='Save Post' /></p></td>														
 					</tr>				
 				</table>
 			</div>
@@ -164,7 +224,7 @@ function tagman_tag_addpost($id, $postid) {
 	tagman_tag_removepost($id, $postid);
 	$sql = "INSERT INTO $wpdb->term_relationships (term_taxonomy_id, object_id) VALUES ($id, $postid)";
 	$wpdb->query($sql);
-	$sql_count = "SELECT COUNT(*) FROM $wpdb->term_relationships a, $wpdb->posts WHERE a.term_taxonomy_id=$id AND a.object_id=b.ID AND b.post_status='publish' AND b.post_type='post'";
+	$sql_count = "SELECT COUNT(*) FROM $wpdb->term_relationships a, $wpdb->posts b WHERE a.term_taxonomy_id=$id AND a.object_id=b.ID AND b.post_status='publish' AND b.post_type='post'";
 	$res_count = $wpdb->get_var($sql_count);
 	$sql = "UPDATE $wpdb->term_taxonomy SET count=$res_count WHERE term_taxonomy_id=$id";
 	$wpdb->query($sql);	
@@ -175,7 +235,7 @@ function tagman_tag_removepost($id, $postid) {
 	global $wpdb;
 	$sql = "DELETE FROM $wpdb->term_relationships WHERE term_taxonomy_id=$id AND object_id=$postid";
 	$wpdb->query($sql);
-	$sql_count = "SELECT COUNT(*) FROM $wpdb->term_relationships a, $wpdb->posts WHERE a.term_taxonomy_id=$id AND a.object_id=b.ID AND b.post_status='publish' AND b.post_type='post'";
+	$sql_count = "SELECT COUNT(*) FROM $wpdb->term_relationships a, $wpdb->posts b WHERE a.term_taxonomy_id=$id AND a.object_id=b.ID AND b.post_status='publish' AND b.post_type='post'";
 	$res_count = $wpdb->get_var($sql_count);
 	$sql = "UPDATE $wpdb->term_taxonomy SET count=$res_count WHERE term_taxonomy_id=$id";
 	$wpdb->query($sql);	
@@ -269,7 +329,7 @@ function tagman_tag_merge($oldid, $newid) {
 			$wpdb->query($sql);
 		}
 	}
-	$sql_count = "SELECT COUNT(*) FROM $wpdb->term_relationships a, $wpdb->posts WHERE a.term_taxonomy_id=$newid AND a.object_id=b.ID AND b.post_status='publish' AND b.post_type='post'";
+	$sql_count = "SELECT COUNT(*) FROM $wpdb->term_relationships a, $wpdb->posts b WHERE a.term_taxonomy_id=$newid AND a.object_id=b.ID AND b.post_status='publish' AND b.post_type='post'";
 	$res_count = $wpdb->get_var($sql_count);
 	$sql = "UPDATE $wpdb->term_taxonomy SET count=$res_count WHERE term_taxonomy_id=$newid";
 	$wpdb->query($sql);
