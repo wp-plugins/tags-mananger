@@ -3,13 +3,15 @@ Contributors: dschuesae
 Tags: post tags management
 Requires at least: 2.3.0
 Tested up to: 2.3.0
+Stable tag: 0.4
+Donate link: http://www.matusz.ch/donate_tagsmanagerwpplugin.htm
 
-Develepment closed! Use Plugin Simple Tags instead of this one!
+Development closed! Use Plugin Simple Tags instead of this one! You can still use this Plugin as is if you like it!
 This plugin helps you to manage your tags
 
 == Description ==
 
-Development closed! Use Plugin Simple Tags instead of this one!
+Development closed! Use Plugin Simple Tags instead of this one! You can still use this Plugin as is if you like it!
 
 With WordPress 2.3 tags are included in Wordpress. At moment there are almost no functionalities to support these tags in Wordpress. This plugin changes this behaviour and adds a page under Management>Tags. Here you can manage your tags!
 
@@ -39,6 +41,11 @@ For Updates:
 6. screenshot-6.jpg
 
 == Changes ==
+Version 0.4 (Closing version)
+<ul>
+<li>There's no development anymore. Look at Simple Tags Plugin - it is better!</li>
+</ul>
+
 Version 0.3
 <ul>
 <li>Shows tags of posts with the possibility to edit, remove tags and add new tags!</li>

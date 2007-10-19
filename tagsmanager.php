@@ -3,8 +3,8 @@
 Plugin Name: Tags Manager
 Plugin URI: http://www.matusz.ch/blog/projekte/tags-manager-wordpress-plugin/
 Feed URI: http://www.matusz.ch/blog/tags/tags-manager-wp-plugin/feed/
-Description: This plugin helps you to manage your tags 
-Version: 0.3 Beta
+Description: This plugin helps you to manage your tags (development closed!)
+Version: 0.4 (Closed)
 Author: Patrick Matusz
 Author URI: http://www.matusz.ch/blog/
 */
